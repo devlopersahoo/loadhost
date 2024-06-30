@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Display</title>
+</head>
+<body>
+    <h1>User Data</h1>
+    <table id="users-table" border="1">
+        <!-- Table content will be filled dynamically -->
+    </table>
+
+    <h1>Other Reference Data</h1>
+    <table id="other-table" border="1">
+        <!-- Table content will be filled dynamically -->
+    </table>
+
+
+<h1>Question Data</h1>
+<table id="question-table" border="1">
+    <!-- Table headers -->
+    <tr>
+        <th>Question</th>
+        <th>Answer</th>
+        <th>Option A</th>
+        <th>Option B</th>
+        <th>Option C</th>
+        <th>Option D</th>
+    </tr>
+    <!-- Table content will be filled dynamically -->
+</table>
+        <!-- Table content will be filled dynamically -->
+    </table>
+
+    <h1>UserScores Data</h1>
+    <table id="user-scores-table" border="1">
+        <!-- Table content will be filled dynamically -->
+    </table>
+
+    <script>
+        // Fetch users data from Python server and update users table
+        fetch('/data')
+            .then(response => response.json())
+            .then(data => {
+                let table = document.getElementById('users-table');
+                // Add table headers
+                let headers = Object.keys(data[0]);
+                let headerRow = table.insertRow();
+                headers.forEach(header => {
+                    let th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                // Add table rows
+                data.forEach(rowData => {
+                    let row = table.insertRow();
+                    headers.forEach(header => {
+                        let cell = row.insertCell();
+                        cell.textContent = rowData[header];
+                    });
+                });
+            })
+            .catch(error => console.error('Error fetching users data:', error));
+
+        // Fetch other reference data from Python server and update other reference table
+        fetch('/data_other')
+            .then(response => response.json())
+            .then(data => {
+                let table = document.getElementById('other-table');
+                // Add table headers
+                let headers = Object.keys(data[0]);
+                let headerRow = table.insertRow();
+                headers.forEach(header => {
+                    let th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                // Add table rows
+                data.forEach(rowData => {
+                    let row = table.insertRow();
+                    headers.forEach(header => {
+                        let cell = row.insertCell();
+                        cell.textContent = rowData[header];
+                    });
+                });
+            })
+            .catch(error => console.error('Error fetching other reference data:', error));
+
+        // Fetch data from the 'Question' reference and update table
+       fetch('/data_question')
+        .then(response => response.json())
+        .then(data => {
+            let table = document.getElementById('question-table');
+            // Add table rows
+            Object.keys(data).forEach(key => {
+                let row = table.insertRow();
+                let cell_question = row.insertCell();
+                let cell_ans = row.insertCell();
+                let cell_qA = row.insertCell();
+                let cell_qB = row.insertCell();
+                let cell_qC = row.insertCell();
+                let cell_qD = row.insertCell();
+                cell_question.textContent = data[key]['Question'];
+                cell_ans.textContent = data[key]['ans'];
+                cell_qA.textContent = data[key]['qA'];
+                cell_qB.textContent = data[key]['qB'];
+                cell_qC.textContent = data[key]['qC'];
+                cell_qD.textContent = data[key]['qD'];
+            });
+        })
+        .catch(error => console.error('Error fetching data from Question reference:', error));
+
+        // Fetch data from the 'UserScores' reference and update table
+        fetch('/data_user_scores')
+            .then(response => response.json())
+            .then(data => {
+                let table = document.getElementById('user-scores-table');
+                // Add table headers
+                let headers = Object.keys(data[0]);
+                let headerRow = table.insertRow();
+                headers.forEach(header => {
+                    let th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                // Add table rows
+                data.forEach(rowData => {
+                    let row = table.insertRow();
+                    headers.forEach(header => {
+                        let cell = row.insertCell();
+                        cell.textContent = rowData[header];
+                    });
+                });
+            })
+            .catch(error => console.error('Error fetching data from UserScores reference:', error));
+    </script>
+</body>
+</html>
