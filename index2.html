@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Display</title>
     <style>
-        /* Style for fixed headers */
         .fixed-header-table {
             width: 100%;
             border-collapse: collapse;
@@ -15,28 +14,28 @@
         .fixed-header-table thead {
             position: sticky;
             top: 0;
-            background-color: #f1f1f1; /* Header background color */
+            background-color: #f1f1f1;
         }
 
         .fixed-header-table th, .fixed-header-table td {
             padding: 8px;
             text-align: left;
-            border: 1px solid #ddd; /* Border color */
-            white-space: nowrap; /* Prevent text wrapping */
-            overflow: hidden; /* Hide overflow content */
-            text-overflow: ellipsis; /* Show ellipsis for overflow text */
+            border: 1px solid #ddd;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .fixed-header-table th {
             position: sticky;
             top: 0;
-            z-index: 1; /* Ensure headers are above other content */
+            z-index: 1;
         }
 
         .fixed-header-table tbody {
             display: block;
             overflow-y: auto;
-            max-height: 400px; /* Adjust height as needed */
+            max-height: 400px;
         }
 
         .fixed-header-table tbody tr {
@@ -45,15 +44,13 @@
             table-layout: fixed;
         }
 
-        /* Highlight effect */
         .highlight {
-            background-color: #f8f8f8; /* Light background color */
-            transition: background-color 0.3s ease; /* Smooth transition */
+            background-color: #f8f8f8;
+            transition: background-color 0.3s ease;
         }
 
-        /* Neon glow effect on hover */
         .neon-glow:hover {
-            animation: neon-glow 1s infinite alternate; /* Neon glow animation */
+            animation: neon-glow 1s infinite alternate;
         }
 
         @keyframes neon-glow {
@@ -64,44 +61,23 @@
                 text-shadow: 0 0 20px #00fff9, 0 0 30px #00fff9, 0 0 40px #00fff9, 0 0 50px #00fff9, 0 0 60px #00fff9, 0 0 70px #00fff9, 0 0 80px #00fff9;
             }
         }
-
-        #chart-container {
-            width: 80%;
-            margin: auto;
-        }
-
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>User Data</h1>
-    <table id="users-table" class="fixed-header-table">
+    <table id="merged-table" class="fixed-header-table">
         <!-- Table content will be filled dynamically -->
     </table>
-
-    <h1>UserScores Data</h1>
-    <table id="user-scores-table" class="fixed-header-table">
-        <!-- Table content will be filled dynamically -->
-    </table>
-
-    <h1>User Locations</h1>
-    <table id="user-locations-table" class="fixed-header-table">
-        <!-- Table content will be filled dynamically -->
-    </table>
-
-    <div id="chart-container">
-        <canvas id="bar-chart"></canvas>
-    </div>
 
     <script>
-        // Fetch users data from Python server and update users table
+        // Fetch merged data from the Python server and update the table
         fetch('/data')
             .then(response => response.json())
             .then(data => {
-                let table = document.getElementById('users-table');
+                let table = document.getElementById('merged-table');
                 if (data.length > 0) {
                     // Add table headers
-                    let headers = ['date', 'helmet', 'name', 'shoe', 'time'];
+                    let headers = ['date', 'helmet', 'name', 'shoe', 'time', 'correctCount', 'wrongCount', 'IsVideoAttended', 'location'];
                     let headerRow = table.insertRow();
                     headers.forEach(header => {
                         let th = document.createElement('th');
@@ -114,116 +90,12 @@
                         headers.forEach(header => {
                             let cell = row.insertCell();
                             cell.textContent = rowData[header];
-                            cell.classList.add('neon-glow'); // Add neon glow effect on hover
+                            cell.classList.add('neon-glow');
                         });
                     });
                 }
             })
-            .catch(error => console.error('Error fetching users data:', error));
-
-        // Fetch data from the 'UserScores' reference and update table
-        fetch('/data_user_scores')
-            .then(response => response.json())
-            .then(data => {
-                let table = document.getElementById('user-scores-table');
-                if (data.length > 0) {
-                    // Add table headers
-                    let headers = ['name', 'correctCount', 'wrongCount', 'IsVideoAttended'];
-                    let headerRow = table.insertRow();
-                    headers.forEach(header => {
-                        let th = document.createElement('th');
-                        th.textContent = header;
-                        headerRow.appendChild(th);
-                    });
-                    // Add table rows
-                    data.forEach(rowData => {
-                        let row = table.insertRow();
-                        headers.forEach(header => {
-                            let cell = row.insertCell();
-                            let value = rowData[header];
-                            // If IsVideoAttended is unknown or empty, set it to 'yes' or 'no' based on previous rows
-                            if (header === 'IsVideoAttended' && (value === '' || value === 'Unknown')) {
-                                let previousRow = row.previousElementSibling;
-                                if (previousRow) {
-                                    let previousValue = previousRow.querySelector(`[data-header="${header}"]`);
-                                    if (previousValue) {
-                                        value = previousValue.textContent.trim();
-                                    }
-                                }
-                            }
-                            cell.textContent = value;
-                            cell.classList.add('neon-glow'); // Add neon glow effect on hover
-                        });
-                    });
-                }
-            })
-            .catch(error => console.error('Error fetching data from UserScores reference:', error));
-
-        // Fetch user locations data from Python server and update user locations table
-        fetch('/data_user_locations')
-            .then(response => response.json())
-            .then(data => {
-                let table = document.getElementById('user-locations-table');
-                if (data.length > 0) {
-                    // Add table headers
-                    let headers = ['name', 'location'];
-                    let headerRow = table.insertRow();
-                    headers.forEach(header => {
-                        let th = document.createElement('th');
-                        th.textContent = header;
-                        headerRow.appendChild(th);
-                    });
-                    // Add table rows
-                    data.forEach(rowData => {
-                        let row = table.insertRow();
-                        headers.forEach(header => {
-                            let cell = row.insertCell();
-                            cell.textContent = rowData[header];
-                            cell.classList.add('neon-glow'); // Add neon glow effect on hover
-                        });
-                    });
-                }
-            })
-            .catch(error => console.error('Error fetching user locations data:', error));
-
-        // Fetch chart data from Python server and render bar chart
-        fetch('/chart_data')
-            .then(response => response.json())
-            .then(data => {
-                const ctx = document.getElementById('bar-chart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: data,
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            label += context.parsed.y;
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true
-                            },
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            })
-            .catch(error => console.error('Error fetching chart data:', error));
+            .catch(error => console.error('Error fetching merged data:', error));
     </script>
 </body>
 </html>
