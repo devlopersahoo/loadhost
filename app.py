@@ -71,66 +71,40 @@ def index():
 
 @app.route('/data')
 def get_data():
-    user_data_list = []
+    merged_data = []
     user_dates_set = set()  # Set to track unique user-date combinations
 
     for user_id, user_info in data_users.items():
+        user_name = user_info.get('name', '')
         video_attendance = user_info.get('IsVideoAttended', '').lower()
         user_info['IsVideoAttended'] = 'yes' if video_attendance == 'yes' else 'no'
+        user_info['location'] = get_user_location(user_id)
         
         # Avoid duplicates for the same day
-        user_date = (user_info.get('name', ''), user_info.get('date', ''))
+        user_date = (user_name, user_info.get('date', ''))
         if user_date not in user_dates_set:
             user_dates_set.add(user_date)
-            user_info['location'] = get_user_location(user_id)
-            user_data_list.append(user_info)
-    
-    return jsonify(user_data_list)
+            merged_data.append({
+                'date': user_info.get('date', ''),
+                'helmet': user_info.get('helmet', ''),
+                'name': user_name,
+                'shoe': user_info.get('shoe', ''),
+                'time': user_info.get('time', ''),
+                'correctCount': 0,
+                'wrongCount': 0,
+                'IsVideoAttended': user_info.get('IsVideoAttended', ''),
+                'location': user_info.get('location', 'Unknown')
+            })
 
-@app.route('/data_user_scores')
-def get_data_user_scores():
-    extracted_data = extract_user_scores_data(data_user_scores, data_users)
-    return jsonify(extracted_data)
+    # Merge with UserScores data
+    for score in extract_user_scores_data(data_user_scores, data_users):
+        for user in merged_data:
+            if user['name'] == score['name']:
+                user['correctCount'] = score['correctCount']
+                user['wrongCount'] = score['wrongCount']
+                user['IsVideoAttended'] = score['IsVideoAttended']
 
-@app.route('/data_user_locations')
-def get_data_user_locations():
-    user_locations = []
-    users_docs = firestore_db.collection('users').stream()
-    for doc in users_docs:
-        user_data = doc.to_dict()
-        user_locations.append({
-            'name': user_data.get('name', 'Unknown'),
-            'location': user_data.get('location', 'Unknown')
-        })
-    return jsonify(user_locations)
-
-@app.route('/chart_data')
-def chart_data():
-    extracted_data = extract_user_scores_data(data_user_scores, data_users)
-    chart_data = {
-        'labels': [data['name'] for data in extracted_data],
-        'datasets': [
-            {
-                'label': 'Correct Count',
-                'backgroundColor': 'rgba(75, 192, 192, 0.2)',
-                'borderColor': 'rgba(75, 192, 192, 1)',
-                'borderWidth': 1,
-                'hoverBackgroundColor': 'rgba(75, 192, 192, 0.4)',
-                'hoverBorderColor': 'rgba(75, 192, 192, 1)',
-                'data': [data['correctCount'] for data in extracted_data],
-            },
-            {
-                'label': 'Wrong Count',
-                'backgroundColor': 'rgba(255, 99, 132, 0.2)',
-                'borderColor': 'rgba(255, 99, 132, 1)',
-                'borderWidth': 1,
-                'hoverBackgroundColor': 'rgba(255, 99, 132, 0.4)',
-                'hoverBorderColor': 'rgba(255, 99, 132, 1)',
-                'data': [data['wrongCount'] for data in extracted_data],
-            },
-        ],
-    }
-    return jsonify(chart_data)
+    return jsonify(merged_data)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
